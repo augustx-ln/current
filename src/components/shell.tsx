@@ -1,8 +1,10 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, useRouterState } from "@tanstack/react-router";
 import { Menu, TerminalSquare, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { AccountButton, DeskSync, MobileAccount } from "@/components/account";
 import { SearchBox } from "@/components/search-box";
+import { authEnabled } from "@/lib/auth/client";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 const NAV = [
   { to: "/phases", label: "Phases" },
@@ -20,6 +22,11 @@ export function Shell({ children }: { children: ReactNode }) {
   const navRef = useRef<HTMLElement>(null);
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
   const active = NAV.find((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))?.to;
+  const { user, isPending } = useCurrentUserState();
+  const pending = authEnabled && isPending;
+  const signedIn = !authEnabled || Boolean(user && !user.isDevFallback);
+  const gate = pathname === "/" || pathname === "/login" || pathname === "/disclaimer";
+  const showApp = signedIn && !pending;
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -43,7 +50,7 @@ export function Shell({ children }: { children: ReactNode }) {
     const link = nav.querySelector<HTMLElement>(`[data-nav="${active}"]`);
     if (!link) return;
     setPill({ left: link.offsetLeft, width: link.offsetWidth });
-  }, [active, pathname]);
+  }, [active, pathname, showApp]);
 
   const [shownFor, setShownFor] = useState(pathname);
   const [enter, setEnter] = useState("");
@@ -67,35 +74,39 @@ export function Shell({ children }: { children: ReactNode }) {
             </span>
             <span className="font-display text-lg leading-none tracking-tight">Current</span>
           </Link>
-          <nav ref={navRef} className="relative ml-4 hidden items-center lg:flex" aria-label="Primary">
-            {pill ? <span className="nav-pill" style={{ left: pill.left, width: pill.width }} aria-hidden /> : null}
-            {NAV.map((item) => {
-              const on = item.to === active;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  data-nav={item.to}
-                  className={`relative z-10 rounded-full px-3 py-2 text-sm transition-colors duration-200 ${on ? "text-fg" : "text-muted hover:text-fg"}`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-          <SearchBox />
-          <AccountButton />
-          <button
-            type="button"
-            className="ml-auto inline-flex size-11 items-center justify-center rounded-md border border-line md:ml-0 lg:hidden"
-            aria-expanded={open}
-            aria-label={open ? "Close menu" : "Open menu"}
-            onClick={() => setOpen((value) => !value)}
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+          {showApp ? (
+            <nav ref={navRef} className="relative ml-4 hidden items-center lg:flex" aria-label="Primary">
+              {pill ? <span className="nav-pill" style={{ left: pill.left, width: pill.width }} aria-hidden /> : null}
+              {NAV.map((item) => {
+                const on = item.to === active;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    data-nav={item.to}
+                    className={`relative z-10 rounded-full px-3 py-2 text-sm transition-colors duration-200 ${on ? "text-fg" : "text-muted hover:text-fg"}`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : null}
+          {showApp ? <SearchBox /> : null}
+          {showApp ? <AccountButton /> : pending ? <div className="hidden h-11 w-24 animate-pulse rounded-full bg-white/10 md:block" aria-hidden /> : null}
+          {showApp ? (
+            <button
+              type="button"
+              className="ml-auto inline-flex size-11 items-center justify-center rounded-md border border-line md:ml-0 lg:hidden"
+              aria-expanded={open}
+              aria-label={open ? "Close menu" : "Open menu"}
+              onClick={() => setOpen((value) => !value)}
+            >
+              {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          ) : null}
         </div>
-        {open ? (
+        {open && showApp ? (
           <div className="menu-drop border-t border-white/10 px-3 py-3 lg:hidden">
             <SearchBox compact />
             <div className="mt-3">
@@ -117,7 +128,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </header>
       <div className="overflow-x-clip">
         <main key={pathname} className={`${enter} ${pathname === "/" ? "w-full" : "mx-auto w-full max-w-6xl px-4 py-6 sm:py-8"}`}>
-          {children}
+          {gate ? children : pending ? <div className="h-[50dvh]" /> : signedIn ? children : <Navigate to="/" />}
         </main>
       </div>
       <footer className="border-t border-line">
@@ -126,24 +137,28 @@ export function Shell({ children }: { children: ReactNode }) {
             <p className="font-display text-xl leading-none">Current</p>
             <p className="mt-2 text-sm text-muted">A lab that never leaves the browser. Creator Aug.</p>
           </div>
-          <FooterCol title="Study" links={[["/tools", "Tools"], ["/linux-commands", "Commands"], ["/learn", "Articles"]]} />
-          <FooterCol
-            title="Practice"
-            links={[
-              ["/phases", "Phases"],
-              ["/terminal-sandbox", "Terminal sandbox"],
-              ["/desk", "Your desk"],
-            ]}
-          />
-          <FooterCol
-            title="Desk"
-            links={[
-              ["/about", "About"],
-              ["/authors", "Authors"],
-              ["/contact", "Contact"],
-              ["/disclaimer", "Disclaimer"],
-            ]}
-          />
+          {showApp ? (
+            <>
+              <FooterCol title="Study" links={[["/tools", "Tools"], ["/linux-commands", "Commands"], ["/learn", "Articles"]]} />
+              <FooterCol
+                title="Practice"
+                links={[
+                  ["/phases", "Phases"],
+                  ["/terminal-sandbox", "Terminal sandbox"],
+                  ["/desk", "Your desk"],
+                ]}
+              />
+              <FooterCol
+                title="Desk"
+                links={[
+                  ["/about", "About"],
+                  ["/authors", "Authors"],
+                  ["/contact", "Contact"],
+                  ["/disclaimer", "Disclaimer"],
+                ]}
+              />
+            </>
+          ) : null}
         </div>
         <p className="border-t border-line px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-muted">
           Current by Aug. Simulated lab only. Practice on systems you are allowed to test.
