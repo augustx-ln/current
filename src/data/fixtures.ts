@@ -1,0 +1,22 @@
+/** Scripted lab targets. These addresses exist only as text inside the sandbox. */
+export const FIXTURE_TRY: Record<string, string> = {
+  nmap: "nmap 10.13.37.20",
+  masscan: "masscan 10.13.37.0/24",
+  whatweb: "whatweb http://10.13.37.20",
+  httpx: "httpx -u http://10.13.37.20",
+  nikto: "nikto -h http://10.13.37.20",
+  gobuster: "gobuster dir -u http://10.13.37.30",
+  ffuf: "ffuf -u http://10.13.37.30/FUZZ",
+  wafw00f: "wafw00f http://10.13.37.20",
+  wpscan: "wpscan --url http://10.13.37.30",
+  nuclei: "nuclei -u http://10.13.37.30",
+  dig: "dig files.lab",
+  amass: "amass enum -d lab",
+  subfinder: "subfinder -d lab",
+  theharvester: "theHarvester -d lab",
+  whois: "whois files.lab",
+  "shodan-cli": "shodan host 10.13.37.20",
+  wireshark: "tshark -i eth0",
+  tcpdump: "tcpdump -i eth0",
+  netcat: "nc -vz 10.13.37.20 80",
+};

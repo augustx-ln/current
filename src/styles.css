@@ -1,0 +1,394 @@
+@import "tailwindcss";
+
+:root {
+  --accent: #e61e32;
+  --accent-ink: #1a0a0c;
+  --rose: #ff4d6a;
+  --ember: #ff8a6b;
+  --wine: #6b1524;
+  --bone: #f6f1ec;
+  --mist: #c4b4b4;
+  --glow: 0 0 28px color-mix(in srgb, var(--accent) 50%, transparent);
+  /* Underdamped springs sampled to rest. UI overshoots a little. Page barely does. */
+  --spring-ui: linear(0, 0.197 5.6%, 0.493 11.1%, 0.776 16.7%, 0.955 22.2%, 1.038 27.8%, 1.057 33.3%, 1.049 38.9%, 1.03 44.4%, 1.015 50%, 1.004 55.6%, 0.998 61.1%, 0.997 66.7%, 0.997 72.2%, 0.998 77.8%, 0.999 83.3%, 1 88.9%, 1);
+  --spring-page: linear(0, 0.141 5.6%, 0.383 11.1%, 0.623 16.7%, 0.783 22.2%, 0.887 27.8%, 0.949 33.3%, 0.984 38.9%, 0.998 44.4%, 1.003 50%, 1.005 55.6%, 1.004 61.1%, 1.003 66.7%, 1.002 72.2%, 1.001 77.8%, 1.001 83.3%, 1 88.9%, 1);
+  --spring-list: linear(0, 0.123 5.6%, 0.348 11.1%, 0.544 16.7%, 0.736 22.2%, 0.873 27.8%, 0.959 33.3%, 1.005 38.9%, 1.025 44.4%, 1.029 50%, 1.026 55.6%, 1.02 61.1%, 1.013 66.7%, 1.007 72.2%, 1.004 77.8%, 1.001 83.3%, 1 88.9%, 0.999 94.4%, 1);
+}
+
+@theme inline {
+  --color-bg: #100d0e;
+  --color-surface: #1a1214;
+  --color-surface-2: #2a181c;
+  --color-fg: #f6f1ec;
+  --color-muted: #c4b4b4;
+  --color-line: color-mix(in srgb, #fff 14%, transparent);
+  --color-accent: var(--accent);
+  --color-rose: #ff4d6a;
+  --color-ember: #ff8a6b;
+  --color-wine: #6b1524;
+  --color-cyan: #f6f1ec;
+  --color-ink: var(--accent-ink);
+  --font-sans: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:not(:disabled) {
+    transition: scale 150ms ease-out, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  button:active:not(:disabled) {
+    scale: 0.96;
+  }
+
+  html {
+    color-scheme: dark;
+    background: #100d0e;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: transparent;
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  body::before {
+    background:
+      radial-gradient(ellipse 55% 42% at 100% -10%, color-mix(in srgb, var(--rose) 42%, transparent), transparent 60%),
+      radial-gradient(ellipse 40% 36% at -10% 110%, color-mix(in srgb, var(--wine) 80%, transparent), transparent 62%),
+      radial-gradient(ellipse 30% 24% at 70% 80%, color-mix(in srgb, var(--ember) 18%, transparent), transparent 70%),
+      linear-gradient(155deg, #241016 0%, #100d0e 46%, #070606 100%);
+  }
+
+  body::after {
+    background-image:
+      linear-gradient(color-mix(in srgb, #fff 5%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, #fff 5%, transparent) 1px, transparent 1px);
+    background-size: 84px 84px;
+    mask-image: radial-gradient(ellipse at 50% 0%, black, transparent 78%);
+    opacity: 0.45;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  summary {
+    transition: color 160ms ease;
+  }
+}
+
+@utility text-glow {
+  text-shadow: var(--glow);
+}
+
+@utility panel {
+  background: color-mix(in srgb, #1a1214 58%, transparent);
+  border: 1px solid color-mix(in srgb, #fff 14%, transparent);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(18px);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+  transition: transform 480ms var(--spring-ui), border-color 180ms ease, background-color 180ms ease, box-shadow 480ms var(--spring-ui);
+}
+
+@utility rise {
+  animation: rise 640ms var(--spring-list) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+a.panel:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--color-line));
+}
+
+.panel:hover:not(.no-pop),
+main .grid > .panel:not(.no-pop):hover,
+main :is(ul, ol) > li.panel:not(.no-pop):hover {
+  z-index: 1;
+  animation: none;
+  opacity: 1;
+  transform: translateY(-4px) scale(1.018);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow:
+    0 18px 40px color-mix(in srgb, #000 40%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .panel:hover:not(.no-pop),
+  main .grid > .panel:not(.no-pop):hover,
+  main :is(ul, ol) > li.panel:not(.no-pop):hover {
+    z-index: auto;
+    transform: none;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+  }
+}
+
+.page-right {
+  animation: page-right 640ms var(--spring-page) backwards;
+}
+
+.page-left {
+  animation: page-left 640ms var(--spring-page) backwards;
+}
+
+.page-fade,
+.chip-swap {
+  animation: page-fade 520ms var(--spring-page) backwards;
+}
+
+@keyframes page-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lamp {
+  box-shadow: var(--glow);
+  animation: lamp 2.8s ease-in-out infinite;
+}
+
+@keyframes lamp {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.topbar {
+  background: color-mix(in srgb, #100d0e 35%, transparent);
+  backdrop-filter: blur(8px);
+  transition:
+    background-color 480ms var(--spring-page),
+    border-color 480ms var(--spring-page),
+    box-shadow 480ms var(--spring-page),
+    backdrop-filter 480ms var(--spring-page);
+}
+
+.topbar-scrolled {
+  background: color-mix(in srgb, #100d0e 88%, transparent);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 10px 30px color-mix(in srgb, #000 35%, transparent);
+}
+
+.menu-drop {
+  animation: menu-drop 420ms var(--spring-ui) both;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 640ms var(--spring-page),
+    transform 640ms var(--spring-page);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.page-land {
+  animation: page-land 720ms var(--spring-page) backwards;
+}
+
+@keyframes menu-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-land {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nav-pill {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rose) 28%, transparent), color-mix(in srgb, var(--accent) 16%, transparent));
+  border: 1px solid color-mix(in srgb, var(--rose) 50%, transparent);
+  transition: left 560ms var(--spring-ui), width 560ms var(--spring-ui);
+}
+
+.term-scroll {
+  scrollbar-color: color-mix(in srgb, var(--accent) 50%, transparent) transparent;
+}
+
+.path-line {
+  transition: height 700ms var(--spring-page);
+}
+
+.path-note {
+  animation: rise 480ms var(--spring-list) both;
+}
+
+.sheet-in {
+  animation: sheet 420ms var(--spring-ui) both;
+}
+
+.nudge {
+  animation: nudge 280ms ease;
+}
+
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes nudge {
+  20% {
+    transform: translateX(-2px);
+  }
+  40% {
+    transform: translateX(2px);
+  }
+  60% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(-15%);
+  }
+}
+
+/* About 70ms apart: sin(45deg) * 100ms. Capped so a long grid still finishes quickly. */
+main :is(ul, ol) > li,
+main .grid > :not(.reveal):not(.path-line),
+.stagger > * {
+  animation: list-in 520ms var(--spring-list) backwards;
+  animation-delay: min(0.84s, calc(sin(45deg) * sibling-index() * 100ms));
+}
+
+.reveal:not(.is-in) :is(ul, ol) > li,
+.reveal:not(.is-in) .grid > :not(.reveal):not(.path-line),
+.no-stagger > *,
+.no-stagger :is(ul, ol) > li {
+  animation: none;
+}
+
+.reveal:not(.is-in) :is(ul, ol) > li,
+.reveal:not(.is-in) .grid > :not(.reveal):not(.path-line) {
+  opacity: 0;
+}
+
+main :is(ul, ol, .grid) a:focus-visible,
+.stagger :is(a, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .lamp,
+  .nav-pill,
+  .page-land,
+  .menu-drop,
+  .page-right,
+  .page-left,
+  .page-fade,
+  .chip-swap,
+  .path-line,
+  .path-note,
+  .sheet-in,
+  .nudge {
+    animation: none;
+    transition: none;
+  }
+
+  .reveal,
+  .topbar,
+  main :is(ul, ol) > li,
+  main .grid > :not(.reveal):not(.path-line),
+  .reveal:not(.is-in) :is(ul, ol) > li,
+  .reveal:not(.is-in) .grid > :not(.reveal):not(.path-line),
+  .stagger > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+
+  button:not(:disabled) {
+    transition: none;
+  }
+}
