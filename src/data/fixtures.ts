@@ -19,4 +19,13 @@ export const FIXTURE_TRY: Record<string, string> = {
   wireshark: "tshark -i eth0",
   tcpdump: "tcpdump -i eth0",
   netcat: "nc -vz 10.13.37.20 80",
+  tshark: "tshark -r lab.pcap",
+  traceroute: "traceroute 10.13.37.20",
+  "arp-scan": "arp-scan --localnet",
+  foremost: "foremost -i lab.dd -o out/",
+  ldapsearch: "ldapsearch -H ldap://10.13.37.30 -x",
+  strings: "strings lab.bin",
+  ufw: "ufw status",
+  fail2ban: "fail2ban-client status",
+  lynis: "lynis audit system",
 };

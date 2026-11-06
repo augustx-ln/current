@@ -19,7 +19,7 @@ function LabsPage() {
       <PageHeading
         kicker="In the browser"
         title="Security labs"
-        lede="Hashing, subnets, headers, a simulated port table, and a quiz. Input stays on this device. Nothing here scans a remote host."
+        lede="Open a lab and run it. Hashes, URL risk, DNS, and registration records you can try on this page. The port table stays simulated."
       />
       {groups.map((group) => (
         <section key={group} className="mb-8">

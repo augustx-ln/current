@@ -1,5 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { labBySlug } from "@/data/labs";
+import { crc32, hmacSha256, md5, sha } from "@/lib/digest";
+import { analyzeUrl, riskLabel } from "@/lib/url-risk";
+import { AgeLab, DnsLab, IpLab, ScoreLab, SslLab, WhoisLab, WordlistLab } from "@/components/labs-live";
 
 const field =
   "w-full rounded-md border border-line bg-bg px-3 py-3 text-sm text-fg placeholder:text-muted";
@@ -14,71 +18,101 @@ export function LabView({ slug }: { slug: string }) {
       <p className="text-xs tracking-widest text-cyan uppercase">{lab.group}</p>
       <h1 className="mt-2 font-display text-3xl font-bold">{lab.name}</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">{lab.summary}</p>
-      <div className="panel mt-6 p-4 sm:p-6">
-        <LabBody slug={slug} />
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
+        <section className="panel p-4">
+          <h2 className="text-xs tracking-widest text-cyan uppercase">When to use it</h2>
+          <p className="mt-2 text-sm text-muted">{lab.when}</p>
+        </section>
+        <section className="panel p-4">
+          <h2 className="text-xs tracking-widest text-cyan uppercase">How to try it</h2>
+          <ol className="mt-2 grid gap-2 text-sm text-muted">
+            {lab.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </section>
+      </div>
+      <div className="panel mt-4 p-4 sm:p-6">
+        <LabBody kind={lab.kind} />
       </div>
     </div>
   );
 }
 
-function LabBody({ slug }: { slug: string }) {
-  switch (slug) {
-    case "hash-generator":
+function LabBody({ kind }: { kind: string }) {
+  switch (kind) {
+    case "hash":
       return <HashLab />;
     case "base64":
       return <Base64Lab />;
-    case "jwt-decoder":
+    case "jwt":
       return <JwtLab />;
-    case "uuid-generator":
+    case "uuid":
       return <UuidLab />;
-    case "json-formatter":
+    case "json":
       return <JsonLab />;
-    case "regex-tester":
+    case "regex":
       return <RegexLab />;
-    case "email-validator":
+    case "email":
       return <EmailLab />;
-    case "password-strength-checker":
+    case "password":
       return <PasswordLab />;
-    case "subnet-calculator":
+    case "subnet":
       return <SubnetLab />;
-    case "port-lab":
+    case "port":
       return <PortLab />;
-    case "security-headers":
+    case "headers":
       return <HeadersLab />;
-    case "url-anatomy":
+    case "url":
       return <UrlLab />;
-    case "permissions":
+    case "perms":
       return <PermLab />;
-    case "cipher-bench":
+    case "cipher":
       return <CipherLab />;
-    case "http-status":
+    case "status":
       return <StatusLab />;
     case "quiz":
       return <QuizLab />;
+    case "dns":
+      return <DnsLab />;
+    case "whois":
+      return <WhoisLab />;
+    case "age":
+      return <AgeLab />;
+    case "ip":
+      return <IpLab />;
+    case "ssl":
+      return <SslLab />;
+    case "score":
+      return <ScoreLab />;
+    case "wordlist":
+      return <WordlistLab />;
     default:
       return <p className="text-sm text-muted">This lab is not wired up.</p>;
   }
 }
 
-async function digest(algorithm: "SHA-256" | "SHA-512", text: string) {
-  const bytes = new TextEncoder().encode(text);
-  const buffer = await crypto.subtle.digest(algorithm, bytes);
-  return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+const HASHES = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512", "CRC32", "HMAC-SHA256"] as const;
 
 function HashLab() {
   const [text, setText] = useState("authorized-lab");
-  const [sha256, setSha256] = useState("");
-  const [sha512, setSha512] = useState("");
+  const [algo, setAlgo] = useState<(typeof HASHES)[number]>("SHA-256");
+  const [secret, setSecret] = useState("lab-key");
+  const [fileName, setFileName] = useState("");
+  const [bytes, setBytes] = useState<Uint8Array | null>(null);
+  const [value, setValue] = useState("");
   const [error, setError] = useState("");
 
   async function run() {
     try {
       setError("");
-      setSha256(await digest("SHA-256", text));
-      setSha512(await digest("SHA-512", text));
+      const data = bytes ?? new TextEncoder().encode(text);
+      if (algo === "MD5") setValue(md5(data));
+      else if (algo === "CRC32") setValue(crc32(data));
+      else if (algo === "HMAC-SHA256") setValue(await hmacSha256(secret, data));
+      else setValue(await sha(algo, data));
     } catch {
-      setError("This browser could not compute a digest.");
+      setError("This browser could not compute that digest.");
     }
   }
 
@@ -86,15 +120,55 @@ function HashLab() {
     <div className="grid gap-4">
       <label className="grid gap-2 text-sm">
         Text
-        <textarea className={field} rows={4} value={text} onChange={(event) => setText(event.target.value)} />
+        <textarea
+          className={field}
+          rows={4}
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setBytes(null);
+            setFileName("");
+          }}
+        />
       </label>
+      <label className="grid gap-2 text-sm">
+        Or a file
+        <input
+          type="file"
+          className="text-sm"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            void file.arrayBuffer().then((buffer) => {
+              setBytes(new Uint8Array(buffer));
+              setFileName(file.name);
+            });
+          }}
+        />
+      </label>
+      {fileName ? <p className="text-xs text-muted">Hashing {fileName}, not the text box.</p> : null}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-2 text-sm">
+          Algorithm
+          <select className={field} value={algo} onChange={(event) => setAlgo(event.target.value as (typeof HASHES)[number])}>
+            {HASHES.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
+        </label>
+        {algo === "HMAC-SHA256" ? (
+          <label className="grid gap-2 text-sm">
+            Key
+            <input className={field} value={secret} onChange={(event) => setSecret(event.target.value)} />
+          </label>
+        ) : null}
+      </div>
       <button type="button" className={button} onClick={() => void run()}>
         Hash locally
       </button>
       {error ? <p className="text-sm text-accent">{error}</p> : null}
-      <Output label="SHA-256" value={sha256} />
-      <Output label="SHA-512" value={sha512} />
-      <p className="text-xs text-muted">Integrity fingerprints only. Do not store passwords this way.</p>
+      <Output label={algo} value={value} />
+      <p className="text-xs text-muted">MD5 and SHA-1 are checksums, not password storage. Nothing is uploaded.</p>
     </div>
   );
 }
@@ -554,35 +628,18 @@ function HeadersLab() {
 }
 
 function UrlLab() {
-  const [value, setValue] = useState("https://login.example.com/reset?next=https://evil.example");
-  const parsed = useMemo(() => {
-    try {
-      const url = new URL(value);
-      const flags: string[] = [];
-      if (url.protocol === "http:") flags.push("Not HTTPS.");
-      if (url.username || url.password) flags.push("Credentials are embedded in the URL. Classic phishing shape.");
-      if (/^\d+\.\d+\.\d+\.\d+$/.test(url.hostname)) flags.push("Host is a raw IP address.");
-      if ((url.hostname.match(/\./g) ?? []).length > 3) flags.push("Many labels. Check which one is the real registrable domain.");
-      if (url.href.includes("@") && !url.username) flags.push("An @ in an odd place can hide the real host.");
-      return {
-        error: "",
-        rows: {
-          Protocol: url.protocol,
-          Host: url.host,
-          Path: url.pathname,
-          Query: url.search || "(none)",
-        },
-        flags,
-      };
-    } catch {
-      return { error: "Not a URL this parser understands.", rows: {} as Record<string, string>, flags: [] as string[] };
-    }
-  }, [value]);
+  const [value, setValue] = useState("http://192.0.2.10/login/verify?account=you");
+  const parsed = useMemo(() => analyzeUrl(value), [value]);
 
   return (
     <div className="grid gap-4">
       <input className={field} value={value} onChange={(event) => setValue(event.target.value)} aria-label="URL" />
       {parsed.error ? <p className="text-sm text-accent">{parsed.error}</p> : null}
+      {!parsed.error ? (
+        <p className="font-display text-3xl text-accent">
+          {riskLabel(parsed.score)} <span className="text-base text-muted">{parsed.score}/100</span>
+        </p>
+      ) : null}
       <dl className="grid gap-2 text-sm">
         {Object.entries(parsed.rows).map(([key, item]) => (
           <div key={key} className="rounded-md border border-line bg-bg px-3 py-2">
@@ -591,8 +648,16 @@ function UrlLab() {
           </div>
         ))}
       </dl>
-      <ul className="grid gap-2 text-sm text-cyan">
-        {parsed.flags.length ? parsed.flags.map((flag) => <li key={flag}>{flag}</li>) : <li>No obvious phishing shape. Still read the host before you type a password.</li>}
+      <ul className="grid gap-2 text-sm">
+        {parsed.flags.length ? (
+          parsed.flags.map((flag) => (
+            <li key={flag.text} className="rounded-md border border-line bg-bg px-3 py-2">
+              <span className="text-accent">+{flag.points}</span> {flag.text}
+            </li>
+          ))
+        ) : parsed.error ? null : (
+          <li className="text-muted">No obvious phishing shape. Still read the host before you type a password.</li>
+        )}
       </ul>
     </div>
   );
@@ -623,6 +688,12 @@ function PermLab() {
       </div>
       <p className="text-xs text-muted">owner · group · others</p>
       <p className="font-display text-3xl text-accent">{octal}</p>
+      <p className="text-sm text-muted">
+        That mode is <code className="text-accent">chmod {octal}</code>.{" "}
+        <Link to="/linux-commands/$slug" params={{ slug: "chmod" }} className="text-accent">
+          chmod
+        </Link>
+      </p>
     </div>
   );
 }

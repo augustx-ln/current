@@ -20,11 +20,13 @@ import { Route as LearnRouteImport } from './routes/learn'
 import { Route as LinuxCommandsRouteImport } from './routes/linux-commands'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PhasesRouteImport } from './routes/phases'
+import { Route as ReadRouteImport } from './routes/read'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as TerminalSandboxRouteImport } from './routes/terminal-sandbox'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as CybersecurityToolsSlugRouteImport } from './routes/cybersecurity-tools.$slug'
 import { Route as LearnSlugRouteImport } from './routes/learn.$slug'
+import { Route as LinuxCommandsSlugRouteImport } from './routes/linux-commands.$slug'
 import { Route as PhasesSlugRouteImport } from './routes/phases.$slug'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -84,6 +86,11 @@ const PhasesRoute = PhasesRouteImport.update({
   path: '/phases',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReadRoute = ReadRouteImport.update({
+  id: '/read',
+  path: '/read',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -108,6 +115,11 @@ const LearnSlugRoute = LearnSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => LearnRoute,
+} as any)
+const LinuxCommandsSlugRoute = LinuxCommandsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => LinuxCommandsRoute,
 } as any)
 const PhasesSlugRoute = PhasesSlugRouteImport.update({
   id: '/$slug',
@@ -134,14 +146,16 @@ export interface FileRoutesByFullPath {
   '/desk': typeof DeskRoute
   '/disclaimer': typeof DisclaimerRoute
   '/learn': typeof LearnRouteWithChildren
-  '/linux-commands': typeof LinuxCommandsRoute
+  '/linux-commands': typeof LinuxCommandsRouteWithChildren
   '/login': typeof LoginRoute
   '/phases': typeof PhasesRouteWithChildren
+  '/read': typeof ReadRoute
   '/search': typeof SearchRoute
   '/terminal-sandbox': typeof TerminalSandboxRoute
   '/tools': typeof ToolsRouteWithChildren
   '/cybersecurity-tools/$slug': typeof CybersecurityToolsSlugRoute
   '/learn/$slug': typeof LearnSlugRoute
+  '/linux-commands/$slug': typeof LinuxCommandsSlugRoute
   '/phases/$slug': typeof PhasesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -155,14 +169,16 @@ export interface FileRoutesByTo {
   '/desk': typeof DeskRoute
   '/disclaimer': typeof DisclaimerRoute
   '/learn': typeof LearnRouteWithChildren
-  '/linux-commands': typeof LinuxCommandsRoute
+  '/linux-commands': typeof LinuxCommandsRouteWithChildren
   '/login': typeof LoginRoute
   '/phases': typeof PhasesRouteWithChildren
+  '/read': typeof ReadRoute
   '/search': typeof SearchRoute
   '/terminal-sandbox': typeof TerminalSandboxRoute
   '/tools': typeof ToolsRouteWithChildren
   '/cybersecurity-tools/$slug': typeof CybersecurityToolsSlugRoute
   '/learn/$slug': typeof LearnSlugRoute
+  '/linux-commands/$slug': typeof LinuxCommandsSlugRoute
   '/phases/$slug': typeof PhasesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -177,14 +193,16 @@ export interface FileRoutesById {
   '/desk': typeof DeskRoute
   '/disclaimer': typeof DisclaimerRoute
   '/learn': typeof LearnRouteWithChildren
-  '/linux-commands': typeof LinuxCommandsRoute
+  '/linux-commands': typeof LinuxCommandsRouteWithChildren
   '/login': typeof LoginRoute
   '/phases': typeof PhasesRouteWithChildren
+  '/read': typeof ReadRoute
   '/search': typeof SearchRoute
   '/terminal-sandbox': typeof TerminalSandboxRoute
   '/tools': typeof ToolsRouteWithChildren
   '/cybersecurity-tools/$slug': typeof CybersecurityToolsSlugRoute
   '/learn/$slug': typeof LearnSlugRoute
+  '/linux-commands/$slug': typeof LinuxCommandsSlugRoute
   '/phases/$slug': typeof PhasesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -203,11 +221,13 @@ export interface FileRouteTypes {
     | '/linux-commands'
     | '/login'
     | '/phases'
+    | '/read'
     | '/search'
     | '/terminal-sandbox'
     | '/tools'
     | '/cybersecurity-tools/$slug'
     | '/learn/$slug'
+    | '/linux-commands/$slug'
     | '/phases/$slug'
     | '/tools/$slug'
     | '/api/auth/$'
@@ -224,11 +244,13 @@ export interface FileRouteTypes {
     | '/linux-commands'
     | '/login'
     | '/phases'
+    | '/read'
     | '/search'
     | '/terminal-sandbox'
     | '/tools'
     | '/cybersecurity-tools/$slug'
     | '/learn/$slug'
+    | '/linux-commands/$slug'
     | '/phases/$slug'
     | '/tools/$slug'
     | '/api/auth/$'
@@ -245,11 +267,13 @@ export interface FileRouteTypes {
     | '/linux-commands'
     | '/login'
     | '/phases'
+    | '/read'
     | '/search'
     | '/terminal-sandbox'
     | '/tools'
     | '/cybersecurity-tools/$slug'
     | '/learn/$slug'
+    | '/linux-commands/$slug'
     | '/phases/$slug'
     | '/tools/$slug'
     | '/api/auth/$'
@@ -264,9 +288,10 @@ export interface RootRouteChildren {
   DeskRoute: typeof DeskRoute
   DisclaimerRoute: typeof DisclaimerRoute
   LearnRoute: typeof LearnRouteWithChildren
-  LinuxCommandsRoute: typeof LinuxCommandsRoute
+  LinuxCommandsRoute: typeof LinuxCommandsRouteWithChildren
   LoginRoute: typeof LoginRoute
   PhasesRoute: typeof PhasesRouteWithChildren
+  ReadRoute: typeof ReadRoute
   SearchRoute: typeof SearchRoute
   TerminalSandboxRoute: typeof TerminalSandboxRoute
   ToolsRoute: typeof ToolsRouteWithChildren
@@ -352,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PhasesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/read': {
+      id: '/read'
+      path: '/read'
+      fullPath: '/read'
+      preLoaderRoute: typeof ReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -386,6 +418,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/learn/$slug'
       preLoaderRoute: typeof LearnSlugRouteImport
       parentRoute: typeof LearnRoute
+    }
+    '/linux-commands/$slug': {
+      id: '/linux-commands/$slug'
+      path: '/$slug'
+      fullPath: '/linux-commands/$slug'
+      preLoaderRoute: typeof LinuxCommandsSlugRouteImport
+      parentRoute: typeof LinuxCommandsRoute
     }
     '/phases/$slug': {
       id: '/phases/$slug'
@@ -432,6 +471,18 @@ const LearnRouteChildren: LearnRouteChildren = {
 
 const LearnRouteWithChildren = LearnRoute._addFileChildren(LearnRouteChildren)
 
+interface LinuxCommandsRouteChildren {
+  LinuxCommandsSlugRoute: typeof LinuxCommandsSlugRoute
+}
+
+const LinuxCommandsRouteChildren: LinuxCommandsRouteChildren = {
+  LinuxCommandsSlugRoute: LinuxCommandsSlugRoute,
+}
+
+const LinuxCommandsRouteWithChildren = LinuxCommandsRoute._addFileChildren(
+  LinuxCommandsRouteChildren,
+)
+
 interface PhasesRouteChildren {
   PhasesSlugRoute: typeof PhasesSlugRoute
 }
@@ -462,9 +513,10 @@ const rootRouteChildren: RootRouteChildren = {
   DeskRoute: DeskRoute,
   DisclaimerRoute: DisclaimerRoute,
   LearnRoute: LearnRouteWithChildren,
-  LinuxCommandsRoute: LinuxCommandsRoute,
+  LinuxCommandsRoute: LinuxCommandsRouteWithChildren,
   LoginRoute: LoginRoute,
   PhasesRoute: PhasesRouteWithChildren,
+  ReadRoute: ReadRoute,
   SearchRoute: SearchRoute,
   TerminalSandboxRoute: TerminalSandboxRoute,
   ToolsRoute: ToolsRouteWithChildren,

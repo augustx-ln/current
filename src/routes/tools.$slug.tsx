@@ -1,8 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { StudyButton } from "@/components/studied";
+import { PhaseCheck } from "@/components/phase-check";
+import { commandByName, commandSlug } from "@/data/commands";
 import { FIXTURE_TRY } from "@/data/fixtures";
-import { toolBySlug, tools } from "@/data/tools";
+import { toolCommands } from "@/data/tool-commands";
+import { toolBySlug, toolLimit, tools } from "@/data/tools";
 import { DESK_EVENT, readDesk, toggleSaved } from "@/lib/study";
 
 export const Route = createFileRoute("/tools/$slug")({
@@ -19,7 +22,10 @@ function ToolPage() {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const related = tools.filter((item) => item.category === tool.category && item.slug !== tool.slug).slice(0, 3);
-  const fixture = tool.category === "Exploitation" ? undefined : FIXTURE_TRY[tool.slug];
+  const fixture = tool.category === "Exploitation" || tool.limit ? undefined : FIXTURE_TRY[tool.slug];
+  const next = tool.next ? toolBySlug(tool.next) : undefined;
+  const needs = tool.needs ?? ["Written scope", "A host, domain, or file you are allowed to test"];
+  const linked = (toolCommands[tool.slug] ?? []).map((name) => commandByName(name)).filter((item) => item != null);
 
   useEffect(() => {
     const sync = () => setSaved(readDesk().saved.includes(tool.slug));
@@ -52,13 +58,21 @@ function ToolPage() {
       </div>
       <p className="mt-5 max-w-3xl text-sm text-muted sm:text-base">{tool.overview}</p>
 
-      {fixture ? (
-        <p className="panel mt-6 p-4 text-sm">
-          <span className="text-muted">Scripted fixture. </span>
-          <code className="text-accent">{fixture}</code>
-          <span className="text-muted"> — only inside the terminal. Nothing is scanned.</span>
-        </p>
-      ) : null}
+      <section className="panel mt-6 p-4 sm:p-5">
+        <h2 className="text-xs tracking-widest text-cyan uppercase">When to use it</h2>
+        <p className="mt-2 text-sm text-muted">{tool.when ?? tool.summary}</p>
+      </section>
+
+      <section className="mt-6">
+        <h2 className="font-display text-lg font-bold">What you need first</h2>
+        <ul className="mt-3 grid gap-2">
+          {needs.map((item) => (
+            <li key={item} className="panel px-4 py-3 text-sm text-muted">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="panel mt-6 p-4 sm:p-5">
         <h2 className="text-sm font-bold text-accent">Install</h2>
@@ -80,8 +94,32 @@ function ToolPage() {
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <p className="mt-4 text-xs text-muted">Syntax: {tool.syntax}</p>
+        <p className="mt-4 text-xs text-muted">Teaching command: {tool.syntax}</p>
+        {fixture ? (
+          <p className="mt-3 text-sm text-muted">
+            Scripted fixture: <code className="text-accent">{fixture}</code>. Only inside the terminal. Nothing is scanned.
+          </p>
+        ) : null}
       </section>
+
+      {linked.length ? (
+        <section className="mt-6">
+          <h2 className="font-display text-lg font-bold">Commands this uses</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {linked.map((command) => (
+              <li key={command.name}>
+                <Link
+                  to="/linux-commands/$slug"
+                  params={{ slug: commandSlug(command.name) }}
+                  className="inline-flex h-11 items-center rounded-full border border-line px-4 text-sm text-accent"
+                >
+                  {command.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {tool.flags.length ? (
         <section className="mt-8">
@@ -91,6 +129,20 @@ function ToolPage() {
               <li key={flag.flag} className="panel px-4 py-3 text-sm">
                 <code className="text-accent">{flag.flag}</code>
                 <span className="mt-1 block text-muted">{flag.meaning}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {tool.output?.length ? (
+        <section className="mt-8">
+          <h2 className="font-display text-lg font-bold">How to read a line</h2>
+          <ul className="mt-3 grid gap-2">
+            {tool.output.map((row) => (
+              <li key={row.line} className="panel px-4 py-3 text-sm">
+                <code className="text-accent">{row.line}</code>
+                <span className="mt-1 block text-muted">{row.meaning}</span>
               </li>
             ))}
           </ul>
@@ -110,9 +162,24 @@ function ToolPage() {
       </section>
 
       <section className="panel mt-8 p-4">
+        <h2 className="text-sm font-bold text-cyan">What this lab will not do</h2>
+        <p className="mt-2 text-sm text-muted">{toolLimit(tool)}</p>
+      </section>
+
+      <section className="panel mt-4 p-4">
         <h2 className="text-sm font-bold text-cyan">Defender note</h2>
         <p className="mt-2 text-sm text-muted">{tool.defender}</p>
       </section>
+      <PhaseCheck slug={tool.slug} />
+
+      {next ? (
+        <p className="mt-8 text-sm">
+          Next stop:{" "}
+          <Link to="/tools/$slug" params={{ slug: next.slug }} className="text-accent">
+            {next.name}
+          </Link>
+        </p>
+      ) : null}
 
       {related.length ? (
         <section className="mt-8">

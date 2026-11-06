@@ -1,4 +1,4 @@
-import { saveDesk, type DeskPayload } from "@/lib/desk.functions";
+import { cleanDesk, saveDesk, type DeskPayload, type Finding } from "@/lib/desk.functions";
 
 export type StudyKind = "tools" | "articles" | "phases";
 
@@ -8,7 +8,7 @@ const KEY = "lantern-studied";
 const SAVED_KEY = "gk-saved";
 export const DESK_EVENT = "current-desk";
 
-const empty = (): Desk => ({ tools: [], articles: [], phases: [], saved: [], passed: [] });
+const empty = (): Desk => ({ tools: [], articles: [], phases: [], saved: [], passed: [], findings: [] });
 
 function list(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -25,13 +25,14 @@ export function readDesk(): Desk {
       const legacy = window.localStorage.getItem(SAVED_KEY);
       if (legacy) saved = list(JSON.parse(legacy) as unknown);
     }
-    return {
+    return cleanDesk({
       tools: list(parsed.tools),
       articles: list(parsed.articles),
       phases: list(parsed.phases),
       saved,
       passed: list(parsed.passed),
-    };
+      findings: parsed.findings,
+    });
   } catch {
     return empty();
   }
@@ -89,14 +90,78 @@ export function markPassed(id: string): Desk {
   return next;
 }
 
+const CITE_KEY = "current-cite";
+
+export type Cite = { title: string; host: string; tool: string; line: string };
+
+export function writeCite(cite: Cite) {
+  window.localStorage.setItem(CITE_KEY, JSON.stringify(cite));
+  markPassed("report-read");
+}
+
+export function readCite(): Cite | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(CITE_KEY);
+    if (!raw) return null;
+    const row = JSON.parse(raw) as Partial<Cite>;
+    if (!row.line || !row.title) return null;
+    return {
+      title: String(row.title).slice(0, 120),
+      host: String(row.host ?? "").slice(0, 80),
+      tool: String(row.tool ?? "").slice(0, 60),
+      line: String(row.line).slice(0, 280),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function addFinding(input: Omit<Finding, "id">): Desk {
+  const current = readDesk();
+  const finding: Finding = {
+    id: `f${Date.now().toString(36)}`,
+    title: input.title.trim().slice(0, 120),
+    host: input.host.trim().slice(0, 80),
+    evidence: input.evidence.trim().slice(0, 280),
+    fix: input.fix.trim().slice(0, 280),
+    tool: input.tool.trim().slice(0, 60),
+  };
+  if (!finding.title) return current;
+  const next = { ...current, findings: [finding, ...current.findings].slice(0, 40) };
+  writeDesk(next);
+  return next;
+}
+
+export function removeFinding(id: string): Desk {
+  const current = readDesk();
+  const next = { ...current, findings: current.findings.filter((item) => item.id !== id) };
+  writeDesk(next);
+  return next;
+}
+
+export function findingsMarkdown(findings: Finding[]) {
+  const lines = ["# Current findings", "", "Fixture notes. These hosts exist only in the lab.", ""];
+  if (!findings.length) lines.push("No findings yet.", "");
+  for (const item of findings) {
+    lines.push(`## ${item.title}`, "");
+    if (item.tool) lines.push(`- Tool: ${item.tool}`);
+    lines.push(`- Host: ${item.host || "—"}`, `- Evidence: ${item.evidence || "—"}`, `- Fix: ${item.fix || "—"}`, "");
+  }
+  return lines.join("\n");
+}
+
 export function unionDesk(left: Desk, right: Desk): Desk {
   const merge = (a: string[], b: string[]) => [...new Set([...a, ...b])];
+  const findings = new Map<string, Finding>();
+  for (const item of [...left.findings, ...right.findings]) findings.set(item.id, item);
   return {
     tools: merge(left.tools, right.tools),
     articles: merge(left.articles, right.articles),
     phases: merge(left.phases, right.phases),
     saved: merge(left.saved, right.saved),
     passed: merge(left.passed, right.passed),
+    findings: [...findings.values()].slice(0, 40),
   };
 }
 

@@ -9,6 +9,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 const NAV = [
   { to: "/phases", label: "Phases" },
   { to: "/tools", label: "Tools" },
+  { to: "/cybersecurity-tools", label: "Labs" },
   { to: "/linux-commands", label: "Commands" },
   { to: "/learn", label: "Learn" },
   { to: "/terminal-sandbox", label: "Terminal" },
@@ -144,6 +145,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 title="Practice"
                 links={[
                   ["/phases", "Phases"],
+                  ["/cybersecurity-tools", "Browser labs"],
                   ["/terminal-sandbox", "Terminal sandbox"],
                   ["/desk", "Your desk"],
                 ]}
@@ -187,7 +189,7 @@ function FooterCol({
   links,
 }: {
   title: string;
-  links: ["/tools" | "/linux-commands" | "/learn" | "/phases" | "/terminal-sandbox" | "/desk" | "/about" | "/authors" | "/contact" | "/disclaimer", string][];
+  links: ["/tools" | "/linux-commands" | "/learn" | "/phases" | "/terminal-sandbox" | "/desk" | "/about" | "/authors" | "/contact" | "/disclaimer" | "/cybersecurity-tools", string][];
 }) {
   return (
     <div>

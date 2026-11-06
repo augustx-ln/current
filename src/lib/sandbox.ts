@@ -22,7 +22,19 @@ const tree: Node = {
           children: {
             "README.txt": {
               kind: "file",
-              body: "Current sandbox.\nYou are on 10.13.37.15/24. There is no default route.\nFake hosts: 10.13.37.1 gateway, 10.13.37.20 files.lab, 10.13.37.30 app.lab.\nTry: ip a, nmap 10.13.37.20, modules, payloads, su\n",
+              body: "Current sandbox.\nYou are on 10.13.37.15/24. There is no default route.\nFake hosts: 10.13.37.1 gateway, 10.13.37.20 files.lab, 10.13.37.30 app.lab.\nTry: ip a, nmap 10.13.37.20, tshark -r lab.pcap, traceroute 10.13.37.20, modules, su\n",
+            },
+            "lab.pcap": {
+              kind: "file",
+              body: "scripted capture label\n1 0.000 10.13.37.20 -> 10.13.37.1 TCP 443\n2 0.040 10.13.37.30 -> 10.13.37.15 TCP 8080\nNot a real pcap. No packets were recorded.\n",
+            },
+            "lab.dd": {
+              kind: "file",
+              body: "scripted disk image label\nforemost would carve notes/scope.txt from a copy.\nThis file is text. Nothing was imaged.\n",
+            },
+            "lab.bin": {
+              kind: "file",
+              body: "strings: files.lab\nstrings: 10.13.37.20\nstrings: fixture-only\n",
             },
             notes: {
               kind: "dir",
@@ -125,10 +137,11 @@ export function run(line: string, state: ShellState): { state: ShellState; lines
       state,
       lines: [
         "Shell: help pwd ls cd cat echo clear whoami id hostname uname date history su tree",
-        "Scan fixtures only: ip ping nmap masscan nc",
+        "Scan fixtures only: ip ping nmap masscan nc traceroute arp-scan",
         "Web enum (scripted): curl whatweb nikto gobuster ffuf httpx wafw00f",
+        "Read fixtures: tshark -r lab.pcap, foremost -i lab.dd, ldapsearch, strings lab.bin",
         "Study: man tools modules payloads learn",
-        "Refused: sqlmap hydra john hashcat msfconsole msfvenom",
+        "Refused: sqlmap hydra john hashcat msfconsole msfvenom bettercap wifite netexec",
         "Address: 10.13.37.15/24. Targets: .20 files.lab  .30 app.lab. No uplink.",
       ],
     };
@@ -221,6 +234,97 @@ export function run(line: string, state: ShellState): { state: ShellState; lines
       ],
     };
   }
+  if (command === "tshark" || command === "tcpdump") {
+    return {
+      state,
+      lines: [
+        `${command} (scripted capture)`,
+        "1 0.000000 10.13.37.20 → 10.13.37.1 TCP 443 [SYN]",
+        "2 0.040000 10.13.37.30 → 10.13.37.15 TCP 8080 [SYN, ACK]",
+        "3 0.081000 10.13.37.20 → 10.13.37.15 DNS files.lab",
+        "Fixture only. No interface was opened.",
+      ],
+    };
+  }
+  if (command === "traceroute" || command === "tracepath") {
+    const host = [...args].reverse().find((part) => !part.startsWith("-")) ?? "10.13.37.20";
+    if (!HOSTS[host] && host !== "files.lab" && host !== "app.lab") {
+      return { state, lines: [`traceroute: ${host}: no route. Stay on 10.13.37.0/24.`] };
+    }
+    const last = host === "app.lab" ? "10.13.37.30" : host === "files.lab" ? "10.13.37.20" : host;
+    return {
+      state,
+      lines: [
+        `traceroute to ${last} (scripted)`,
+        " 1  10.13.37.1  0.2 ms",
+        ` 2  ${last}  0.4 ms`,
+        "Path is a label. No probe was sent.",
+      ],
+    };
+  }
+  if (command === "arp-scan") {
+    return {
+      state,
+      lines: [
+        "arp-scan (scripted, this LAN only)",
+        "10.13.37.1   02:00:00:13:37:01  fixture gateway",
+        "10.13.37.20  02:00:00:13:37:20  files.lab",
+        "10.13.37.30  02:00:00:13:37:30  app.lab",
+        "3 hosts. No ARP request left the browser.",
+      ],
+    };
+  }
+  if (command === "foremost") {
+    return {
+      state,
+      lines: [
+        "foremost (scripted image lab.dd)",
+        "Carve of a copy, not the original.",
+        "txt: notes/scope.txt",
+        "Audit: wrote nothing to disk outside this tab.",
+      ],
+    };
+  }
+  if (command === "ldapsearch") {
+    const blob = args.join(" ");
+    if (blob && !blob.includes("10.13.37.") && !blob.includes("lab")) {
+      return { state, lines: ["ldapsearch: give the fixture directory, ldap://10.13.37.30", "No query was sent."] };
+    }
+    return {
+      state,
+      lines: [
+        "ldapsearch (scripted) ldap://10.13.37.30",
+        "dn: dc=lab,dc=local",
+        "dn: uid=kali,ou=people,dc=lab,dc=local",
+        "mail: kali@lab.local",
+        "Anonymous bind returned this fixture. No directory was contacted.",
+      ],
+    };
+  }
+  if (command === "strings") {
+    return {
+      state,
+      lines: ["strings (scripted) lab.bin", "files.lab", "10.13.37.20", "fixture-only", "No binary was loaded."],
+    };
+  }
+  if (command === "ufw") {
+    return {
+      state,
+      lines: ["Status: active (scripted)", "Default: deny (incoming)", "22/tcp  ALLOW  OpenSSH", "80/tcp  ALLOW  fixture-httpd", "This firewall is a label. No rule was installed."],
+    };
+  }
+  if (command === "fail2ban-client" || command === "fail2ban") {
+    return {
+      state,
+      lines: ["Status (scripted)", "Jail list: sshd", "Currently banned: 0", "The log was not read. No address was banned."],
+    };
+  }
+  if (command === "lynis") {
+    return {
+      state,
+      lines: ["lynis (scripted checklist)", "[+] Firewall active", "[-] SSH password authentication still suggested off", "Hardening index: a label, not a score from this machine."],
+    };
+  }
   if (WEB_TOOLS.has(command) || command === "curl" || command === "wget" || command === "nc" || command === "ncat" || command === "netcat" || RECON.has(command)) {
     return webish(state, command, args);
   }
@@ -274,7 +378,7 @@ export function run(line: string, state: ShellState): { state: ShellState; lines
 }
 
 const WEB_TOOLS = new Set(["whatweb", "nikto", "gobuster", "ffuf", "httpx", "wafw00f", "wpscan", "nuclei", "dirb"]);
-const RECON = new Set(["dig", "whois", "amass", "subfinder", "theharvester", "tshark", "tcpdump", "shodan"]);
+const RECON = new Set(["dig", "whois", "amass", "subfinder", "theharvester", "shodan"]);
 
 const REFUSED = new Set([
   "ssh",
@@ -288,8 +392,20 @@ const REFUSED = new Set([
   "john",
   "hashcat",
   "aircrack-ng",
+  "airodump-ng",
+  "aireplay-ng",
+  "wifite",
+  "bettercap",
   "responder",
   "mimikatz",
+  "netexec",
+  "crackmapexec",
+  "cme",
+  "impacket",
+  "psexec",
+  "secretsdump",
+  "wmiexec",
+  "setoolkit",
   "powershell",
   "python",
   "python3",

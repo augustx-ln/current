@@ -1,17 +1,24 @@
 import type { Tool } from "./types";
+import { guideExtras } from "./tools-guide";
+import { moreTools } from "./tools-more";
 
 export const categories = [
   "Reconnaissance",
   "Web",
-  "Exploitation",
   "Network",
-  "Identity",
+  "Sniffing",
   "Wireless",
+  "Identity",
+  "Exploitation",
   "Forensics",
+  "Reverse Engineering",
+  "Reporting",
   "Hardening",
+  "Hardware",
+  "Social Engineering",
 ] as const;
 
-export const tools: Tool[] = [
+const rawTools: Tool[] = [
   {
     slug: "nmap",
     name: "Nmap",
@@ -907,8 +914,19 @@ export const tools: Tool[] = [
     ],
     tags: ["cve", "inventory"],
   },
+  ...moreTools,
 ];
+
+export const tools: Tool[] = rawTools.map((tool) => ({ ...tool, ...guideExtras[tool.slug] }));
 
 export function toolBySlug(slug: string) {
   return tools.find((tool) => tool.slug === slug);
+}
+
+export function toolLimit(tool: Tool) {
+  if (tool.limit) return tool.limit;
+  if (tool.category === "Exploitation" || tool.category === "Social Engineering") {
+    return "Current will not run this tool, generate a payload, or walk an attack. This page is literacy.";
+  }
+  return "Practice only on systems you own or are contracted to test. The terminal prints scripts. It does not reach a real network.";
 }

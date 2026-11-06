@@ -2,7 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { articles } from "@/data/articles";
-import { commands } from "@/data/commands";
+import { commandSlug, commands } from "@/data/commands";
+import { labs } from "@/data/labs";
 import { phases } from "@/data/phases";
 import { tools } from "@/data/tools";
 
@@ -105,7 +106,7 @@ function suggest(query: string, navigate: ReturnType<typeof useNavigate>): Hit[]
   if (!needle) return [];
   const hits: Hit[] = [];
   for (const tool of tools) {
-    if (`${tool.name} ${tool.tags.join(" ")} ${tool.category}`.toLowerCase().includes(needle)) {
+    if (`${tool.name} ${tool.tags.join(" ")} ${tool.category} ${tool.when ?? ""}`.toLowerCase().includes(needle)) {
       hits.push({
         key: `t-${tool.slug}`,
         label: tool.name,
@@ -120,7 +121,7 @@ function suggest(query: string, navigate: ReturnType<typeof useNavigate>): Hit[]
         key: `c-${command.name}`,
         label: command.name,
         hint: `Command · ${command.category}`,
-        go: () => void navigate({ to: "/linux-commands" }),
+        go: () => void navigate({ to: "/linux-commands/$slug", params: { slug: commandSlug(command.name) } }),
       });
     }
   }
@@ -144,5 +145,15 @@ function suggest(query: string, navigate: ReturnType<typeof useNavigate>): Hit[]
       });
     }
   }
-  return hits.slice(0, 7);
+  for (const lab of labs) {
+    if (`${lab.name} ${lab.summary} ${lab.group}`.toLowerCase().includes(needle)) {
+      hits.push({
+        key: `l-${lab.slug}`,
+        label: lab.name,
+        hint: `Lab · ${lab.group}`,
+        go: () => void navigate({ to: "/cybersecurity-tools/$slug", params: { slug: lab.slug } }),
+      });
+    }
+  }
+  return hits.slice(0, 8);
 }

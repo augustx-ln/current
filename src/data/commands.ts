@@ -1,4 +1,5 @@
 import type { Command } from "./types";
+import { commandExtras } from "./commands-guide";
 
 export const commandCategories = [
   "Navigation",
@@ -12,7 +13,7 @@ export const commandCategories = [
   "Packages",
 ] as const;
 
-export const commands: Command[] = [
+const rawCommands: Command[] = [
   { name: "pwd", category: "Navigation", summary: "Print the current working directory.", syntax: "pwd", example: "pwd" },
   { name: "ls", category: "Navigation", summary: "List files. -l is long form, -a includes hidden names.", syntax: "ls [options] [path]", example: "ls -la /etc" },
   { name: "cd", category: "Navigation", summary: "Change directory. cd with no argument returns home.", syntax: "cd [directory]", example: "cd /var/log" },
@@ -91,6 +92,18 @@ export const commands: Command[] = [
   { name: "export", category: "System", summary: "Put a variable in the environment of child processes.", syntax: "export NAME=value", example: "export EDITOR=vim" },
   { name: "echo", category: "Text", summary: "Print arguments. Useful in scripts and the sandbox.", syntax: "echo <text>", example: "echo \"$HOME\"" },
 ];
+
+export const commands: Command[] = rawCommands.map((command) => ({ ...command, ...commandExtras[command.name] }));
+
+export function commandSlug(name: string) {
+  if (name === "cd ..") return "cd-parent";
+  if (name === "sudo -l") return "sudo-l";
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function commandBySlug(slug: string) {
+  return commands.find((command) => commandSlug(command.name) === slug);
+}
 
 export function commandByName(name: string) {
   return commands.find((command) => command.name === name);

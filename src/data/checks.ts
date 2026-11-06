@@ -7,16 +7,16 @@ export type Check = {
 
 export const checks: Record<string, Check> = {
   "rules-of-engagement": {
-    prompt: "What has to exist before a test starts?",
-    choices: ["Written scope from the owner", "A public exploit", "A guess about the network"],
+    prompt: "Which address is out of scope in Current?",
+    choices: ["8.8.8.8", "10.13.37.20", "files.lab"],
     answer: 0,
-    note: "If a tester cannot show the scope, the work stops.",
+    note: "The fixture is 10.13.37.0/24. Everything else has no route.",
   },
   "lab-network": {
-    prompt: "Which address is you, inside Current?",
-    choices: ["10.13.37.15", "8.8.8.8", "10.13.37.20"],
+    prompt: "Why is filtered not the same as closed?",
+    choices: ["A filter ate the probe, so you do not know", "The service is turned off", "The host is offline"],
     answer: 0,
-    note: "files.lab is .20. You are .15. Nothing routes past that subnet.",
+    note: "Open is a label here. Filtered means the answer cannot be trusted.",
   },
   "service-notes": {
     prompt: "An open port on a scripted report means what?",
@@ -59,5 +59,11 @@ export const checks: Record<string, Check> = {
     choices: ["Evidence, impact, a fix, and closed access", "A screenshot of a prompt", "A copy of client secrets"],
     answer: 0,
     note: "If it is not in the report, it did not happen.",
+  },
+  whatweb: {
+    prompt: "What is a scripted banner good for?",
+    choices: ["A line you can cite", "A login you should try", "Proof a packet left the browser"],
+    answer: 0,
+    note: "Cite the banner. Nothing was contacted.",
   },
 };

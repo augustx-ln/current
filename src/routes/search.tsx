@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeading } from "@/components/shell";
 import { articles } from "@/data/articles";
-import { commands } from "@/data/commands";
+import { commandSlug, commands } from "@/data/commands";
 import { labs } from "@/data/labs";
 import { phases } from "@/data/phases";
 import { tools } from "@/data/tools";
@@ -29,7 +29,7 @@ function SearchPage() {
   const phaseHits = needle
     ? phases.filter((item) => `${item.name} ${item.summary} ${item.phase}`.toLowerCase().includes(needle))
     : [];
-  const labHits = needle ? labs.filter((lab) => `${lab.name} ${lab.summary}`.toLowerCase().includes(needle)) : [];
+  const labHits = needle ? labs.filter((lab) => `${lab.name} ${lab.summary} ${lab.when}`.toLowerCase().includes(needle)) : [];
   const empty = needle && !toolHits.length && !commandHits.length && !articleHits.length && !phaseHits.length && !labHits.length;
 
   return (
@@ -58,7 +58,7 @@ function SearchPage() {
           <h2 className="mb-3 text-xs tracking-widest text-cyan uppercase">Commands</h2>
           <div className="grid gap-3">
             {commandHits.map((command) => (
-              <Link key={command.name} to="/linux-commands" className="panel block p-4 text-sm">
+              <Link key={command.name} to="/linux-commands/$slug" params={{ slug: commandSlug(command.name) }} className="panel block p-4 text-sm">
                 <span className="font-bold text-accent">{command.name}</span>
                 <span className="mt-1 block text-muted">{command.summary}</span>
               </Link>

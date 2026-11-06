@@ -15,6 +15,11 @@ export type Tool = {
   flags: { flag: string; meaning: string }[];
   steps: string[];
   tags: string[];
+  when?: string;
+  needs?: string[];
+  output?: { line: string; meaning: string }[];
+  limit?: string;
+  next?: string;
 };
 
 export type Command = {
@@ -23,6 +28,8 @@ export type Command = {
   summary: string;
   syntax: string;
   example: string;
+  when?: string;
+  report?: string;
 };
 
 export type ArticleSection = {
@@ -43,7 +50,11 @@ export type Article = {
 
 export type Lab = {
   slug: string;
+  kind: string;
   name: string;
   summary: string;
   group: string;
+  when: string;
+  steps: string[];
+  aliases?: string[];
 };

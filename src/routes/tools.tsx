@@ -30,6 +30,8 @@ function ToolsPage() {
       !needle ||
       tool.name.toLowerCase().includes(needle) ||
       tool.summary.toLowerCase().includes(needle) ||
+      (tool.when ?? "").toLowerCase().includes(needle) ||
+      tool.category.toLowerCase().includes(needle) ||
       tool.tags.some((tag) => tag.includes(needle));
     return inCat && inQuery;
   });
@@ -39,7 +41,7 @@ function ToolsPage() {
       <PageHeading
         kicker="Kali tools"
         title="Tool guides"
-        lede="Guides by job. Exploitation is its own shelf: what the tools are, and what this lab will not run."
+        lede="One shape for every guide: when to use it, what you need first, the teaching command, how to read a line, and what this lab will not run."
       />
       <ChipBar value={cat}>
         {["All", ...categories].map((item) => (
